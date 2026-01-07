@@ -174,7 +174,13 @@ function themeConfig($form) {
     $GeetestKEY = new Typecho_Widget_Helper_Form_Element_Text('GeetestKEY', NULL, NULL, _t('极验KEY'), _t('如需开启评论提交前的极验验证，请填写极验后台生成的 验证KEY'));
     $form->addInput($GeetestKEY);
     
+    $FriendCircleAPI = new Typecho_Widget_Helper_Form_Element_Text('FriendCircleAPI', NULL, 'https://fc.mcyzsx.top/', _t('友链朋友圈API'), _t('请填写友链朋友圈的API地址'));
+    $form->addInput($FriendCircleAPI);
     
+    $FriendCirclePageSize = new Typecho_Widget_Helper_Form_Element_Text('FriendCirclePageSize', NULL, '15', _t('友链朋友圈每页数量'), _t('请填写友链朋友圈每页显示的文章数量'));
+    $form->addInput($FriendCirclePageSize);
+
+
     //—————————————————————————————————————— 社交按钮 ——————————————————————————————————————
 
     $QQ = new Typecho_Widget_Helper_Form_Element_Text('QQ', NULL, NULL, _t('QQ'), _t('请填写完整的QQ群描述或QQ号描述，输入的内容会直接作为弹框消息显示。'));
@@ -188,6 +194,18 @@ function themeConfig($form) {
     
     $Github = new Typecho_Widget_Helper_Form_Element_Text('Github', NULL, NULL, _t('Github'), _t('请填写Github地址。'));
     $form->addInput($Github);
+    
+    $Telegram = new Typecho_Widget_Helper_Form_Element_Text('Telegram', NULL, NULL, _t('Telegram'), _t('请填写Telegram地址。'));
+    $form->addInput($Telegram);
+    
+    $Mastodon = new Typecho_Widget_Helper_Form_Element_Text('Mastodon', NULL, NULL, _t('Mastodon'), _t('请填写Mastodon地址。'));
+    $form->addInput($Mastodon);
+    
+    $X = new Typecho_Widget_Helper_Form_Element_Text('X', NULL, NULL, _t('X'), _t('请填写X地址。'));
+    $form->addInput($X);
+    
+    $BiliBili = new Typecho_Widget_Helper_Form_Element_Text('BiliBili', NULL, NULL, _t('BiliBili'), _t('请填写BiliBili地址。'));
+    $form->addInput($BiliBili);
     
     //—————————————————————————————————————— 自定义样式 ——————————————————————————————————————
     // 自定义CSS

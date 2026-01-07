@@ -24,16 +24,31 @@
     </div>
     <div class="contact">
         <?php if (!empty($this->options->QQ)): ?>
-        <a id="qq" title="QQ"><i class="iconfont icon-qq"></i></a>
+        <a id="qq" title="QQ"><iconify-icon icon="ri:qq-fill" width="22" height="22"></iconify-icon></a>
         <?php endif; ?>
         <?php if (!empty($this->options->Weixin)): ?>
-        <a id="wxmp" title="微信公众号"><i class="iconfont icon-wechat"></i></a>
+        <a id="wxmp" title="微信公众号"><iconify-icon icon="logos:wechat" width="22" height="22"></iconify-icon></a>
         <?php endif; ?>
         <?php if (!empty($this->options->Email)): ?>
-        <a id="tomail" title="博主邮箱"><i class="iconfont icon-mail"></i></a>
+        <a id="tomail" title="博主邮箱"><iconify-icon icon="material-symbols:mail" width="22" height="22"></iconify-icon></a>
         <?php endif; ?>
         <?php if (!empty($this->options->Github)): ?>
-        <a href="<?php $this->options->Github();?>" target="_blank" title="Github"><i class="iconfont icon-github"></i></a>
+        <a href="<?php $this->options->Github();?>" target="_blank" title="Github"><iconify-icon icon="mdi:github" width="22" height="22"></iconify-icon></a>
+        <?php endif; ?>
+        <?php if (!empty($this->options->Telegram)): ?>
+        <a href="<?php $this->options->Telegram();?>" target="_blank" title="Telegram"><iconify-icon icon="mdi:telegram" width="22" height="22"></iconify-icon></a>
+        <?php endif; ?>
+        <?php if (!empty($this->options->Mastodon)): ?>
+        <a href="<?php $this->options->Mastodon();?>" target="_blank" title="Mastodon"><iconify-icon icon="simple-icons:mastodon" width="22" height="22"></iconify-icon></a>
+        <?php endif; ?>
+        <?php if (!empty($this->options->X)): ?>
+        <a href="<?php $this->options->X();?>" target="_blank" title="X"><iconify-icon icon="logos:x" width="22" height="22"></iconify-icon></a>
+        <?php endif; ?>
+        <?php if (!empty($this->options->Twitter)): ?>
+        <a href="<?php $this->options->Twitter();?>" target="_blank" title="Twitter"><iconify-icon icon="logos:twitter" width="22" height="22"></iconify-icon></a>
+        <?php endif; ?>
+        <?php if (!empty($this->options->BiliBili)): ?>
+        <a href="<?php $this->options->BiliBili();?>" target="_blank" title="BiliBili"><iconify-icon icon="logos:bilibili" width="22" height="22"></iconify-icon></a>
         <?php endif; ?>
     </div>
 </div>

@@ -30,6 +30,7 @@ foreach ($domains as $domain): ?>
 </title>
 <link href="<?php $this->options->themeUrl('/static/sdk/animate.compat.css'); ?>" rel="stylesheet"><!--动画效果-->
 <link href="//at.alicdn.com/t/c/font_3940454_drimor4umam.css" rel="stylesheet"/><!---图标库 iconfont.cn -->
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script><!---Iconify图标库 -->
 <?php if ($this->is('index')):?>
 <link rel="stylesheet" href="<?php $this->options->themeUrl('/static/sdk/swiper/swiper-bundle.min.css'); ?>" /><!--轮播图-->
 <?php endif;?>
