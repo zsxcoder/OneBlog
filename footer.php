@@ -9,6 +9,8 @@
     </div>
     <div class="copyright">
         Copyright&copy;<?php if (!empty($this->options->Webtime)): echo $this->options->Webtime().'-'; ?><?php endif; ?><?php echo date('Y'); ?>&nbsp;&nbsp;All Rights Reserved.&nbsp;&nbsp;Load：<?php echo timer_stop();?><br>
+        <span id="site-age"></span><br>
+        <span id="voyager-distance"></span><br>
             <?php if (!empty($this->options->WA)): ?>
                 <img src="<?php $this->options->themeUrl('/static/img/beian.png'); ?>"/><a href="https://beian.mps.gov.cn" rel="nofollow noreferrer" target="_blank"><?php $this->options->WA(); ?></a>&nbsp;&nbsp;
             <?php endif; ?>
@@ -118,6 +120,44 @@ $(document).on('click', '#tomail', function() {layer.msg('联系邮箱：<?php $
 <?php if (!empty($this->options->JS)): ?>
 <?php $this->options->JS();?>
 <?php endif; ?>
+<script>
+// 建站时间计算（精确到秒）
+function updateSiteAge() {
+    // 建站时间，可根据实际情况修改
+    const siteStartDate = new Date('2026-01-06 12:00:00');
+    const now = new Date();
+    const diff = now - siteStartDate;
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    document.getElementById('site-age').textContent = `建站时间：${days}天 ${hours}小时 ${minutes}分 ${seconds}秒`;
+}
+
+// 旅行者一号距离计算
+function updateVoyagerDistance() {
+    // 旅行者一号发射日期：1977年9月5日
+    const launchDate = new Date('1977-09-05 12:56:00'); // 发射时间（UTC）
+    const speedPerYear = 350000000; // 每年飞行距离（公里）
+    
+    const now = new Date();
+    const diff = now - launchDate;
+    const totalYears = diff / (1000 * 60 * 60 * 24 * 365.25);
+    
+    const currentDistance = totalYears * speedPerYear;
+    const formattedDistance = currentDistance.toLocaleString('zh-CN', {maximumFractionDigits: 2});
+    
+    document.getElementById('voyager-distance').textContent = `旅行者一号距离地球：${formattedDistance} 公里`;
+}
+
+// 初始化并定时更新
+updateSiteAge();
+updateVoyagerDistance();
+setInterval(updateSiteAge, 1000); // 每秒更新建站时间
+setInterval(updateVoyagerDistance, 1000); // 每秒更新旅行者一号距离
+</script>
 </div>
 </body>
 </html>
