@@ -3,9 +3,9 @@
         <?php if ($menu = CustomMenu()): ?>
         <?php echo $menu['noIcon']; ?>
         <?php endif; ?>
-        <!--如果需要仅在网站底部额外增加页面路径，则按照以下格式增加即可：
+        <!--如果需要仅在网站底部额外增加页面路径，则按照以下格式增加即可：-->
         <a href="/archives">归档</a>
-        -->
+        
     </div>
     <div class="copyright">
         Copyright&copy;<?php if (!empty($this->options->Webtime)): echo $this->options->Webtime().'-'; ?><?php endif; ?><?php echo date('Y'); ?>&nbsp;&nbsp;All Rights Reserved.&nbsp;&nbsp;Load：<?php echo timer_stop();?><br>
@@ -57,11 +57,11 @@
 
 
 <?php $this->footer();?>
-<script src="<?php $this->options->themeUrl('/static/sdk/jquery.min.js'); ?>"></script><!--基础依赖放在最前面-->
-<script src="<?php $this->options->themeUrl('/static/sdk/fancybox3/jquery.fancybox.min.js'); ?>"></script><!--图片灯箱效果-->
-<script src="<?php $this->options->themeUrl('/static/sdk/layer/layer.js'); ?>"></script>
+<script src="https://cncdn.cc/jquery/3.7.1/dist/jquery.min.js"></script><!--基础依赖放在最前面-->
+<script src="https://cncdn.cc/@fancyapps/fancybox/3.5.7/dist/jquery.fancybox.min.js"></script><!--图片灯箱效果-->
+<script src="https://cncdn.cc/layer/3.1.1/layer.js"></script>
 <?php if ($this->is('index')):?>
-<script src="<?php $this->options->themeUrl('/static/sdk/swiper/swiper-bundle.min.js'); ?>"></script>
+<script src="https://cncdn.cc/swiper/8.3.2/swiper-bundle.min.js"></script>
 <script>
 var bannerSwitch = '<?= $this->options->switch === 'on' ? 'on' : 'off' ?>';
 </script>
@@ -69,7 +69,7 @@ var bannerSwitch = '<?= $this->options->switch === 'on' ? 'on' : 'off' ?>';
 <?php if ($this->is('post') || $this->is('page')): ?>
 <?php if ($this->options->BeCode == 'on'):?>
 <!--代码高亮逻辑-->
-<script src="<?php $this->options->themeUrl('/static/sdk/highlightjs/highlight.min.js'); ?>"></script>
+<script src="https://cncdn.cc/highlightjs/cdn-release/11.11.1/build/highlight.min.js"></script>
 <script defer>
 document.addEventListener('DOMContentLoaded', function () {
     const codeBlocks = document.querySelectorAll('pre code');
@@ -101,10 +101,10 @@ document.addEventListener('DOMContentLoaded', function () {
 <script src="https://static.geetest.com/v4/gt4.js"></script>
 <?php endif;?>
 <!--评论无限加载js-->
-<script src="<?php $this->options->themeUrl('/static/js/comments.js?v=3.6.4'); ?>"></script>
+<script src="<?php $this->options->themeUrl('/static/js/comments.js?v=3.6.5'); ?>"></script>
 <?php endif;?>
 
-<script src="<?php $this->options->themeUrl('/static/js/main.js?v=3.6.4'); ?>"></script><!--主题js-->
+<script src="<?php $this->options->themeUrl('/static/js/main.js?v=3.6.5'); ?>"></script><!--主题js-->
 
 <!-- 版权信息 -->
 <div id="copyright-info" style="display: none;">

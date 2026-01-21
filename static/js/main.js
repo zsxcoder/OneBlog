@@ -1,5 +1,5 @@
 /**
- * Updated: 2025-10-09
+ * Updated: 2026-1-19
  * Author: ©彼岸临窗 oneblog.net
  *
  * 注释含命名规范，开源不易，如需引用请注明来源:彼岸临窗 https://oneblog.net。
@@ -602,64 +602,347 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 /** 用户登录弹框结束 **/
 
-/**动态发布弹框开始**/
-$(document).ready(function () {
-    $('#publish-button').on('click', function () {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const commentUrl = document.querySelector('meta[name="comment-url"]').getAttribute('content');
-        layer.open({
-            type: 1,
-            move: false,
-            skin: 'layui-memos',
-            area: ['420px', 'auto'], 
-            title: ' ',
-            shadeClose: true, 
-            closeBtn: 1,
-            content: `
-                <form class="memos-form" id="comment-form" method="post" action="${commentUrl}" role="form">
+/** 动态发布弹框（适配插件九宫格上传，延迟上传）**/
+$(function () {
+    const cfg = window.memosConfig || {};
+    const imageEnabled = !!cfg.enabled || !!window.__MEMOS_IMAGE__;
+    const $publishBtn = $('#publish-button');
+    if (!$publishBtn.length) return;
+
+    const uploadUrl = cfg.memosUploadUrl || '/action/memos-upload';
+    const signUrl = cfg.memosSignUrl || '/action/memos-sign';
+    const useCos = !!cfg.memosUseCos;
+
+    let fileQueue = []; 
+    let uploading = false;
+    let layerIndex = null;
+
+    function updateLayerHeight() {
+        if (layerIndex == null) return;
+        const $layer = $('#layui-layer' + layerIndex);
+        if (!$layer.length) return;
+
+        const $content = $layer.find('.layui-layer-content');
+        $content.css({ height: 'auto', overflow: 'visible' });
+
+        const titleH = $layer.find('.layui-layer-title').outerHeight() || 0;
+        const contentH = $content.outerHeight() || 0;
+        layer.style(layerIndex, { height: titleH + contentH });
+    }
+
+    function updateAddButtonVisibility() {
+        $('#memos-image-add').toggle(fileQueue.length < 9);
+        updateLayerHeight();
+    }
+
+    function clearQueue() {
+        fileQueue.forEach(f => {
+            try { URL.revokeObjectURL(f.previewUrl); } catch (e) {}
+        });
+        fileQueue = [];
+    }
+
+    function buildFormHtml(commentUrl, csrfToken) {
+        // 插件未启用：仅文本发布（无图片 UI、无 memos_imgs）
+        if (!imageEnabled) {
+            return `
+                <form class="memos-form" id="comment-form" method="post" action="${commentUrl}">
                     <h3>发布动态</h3>
                     <textarea name="text" id="textarea" required></textarea>
                     <input type="hidden" name="_" value="${csrfToken}">
                     <button type="button" id="submit-memos" class="button-submit">发布</button>
                 </form>
-            `
-        });
+            `;
+        }
 
-        $('#submit-memos').on('click', function () {
-            const textContent = $('#textarea').val();
-            if (!textContent) {
-                layer.msg('请输入内容！');
+        // 插件启用：带图片 UI
+        return `
+            <form class="memos-form" id="comment-form" method="post" action="${commentUrl}">
+                <h3>发布动态</h3>
+                <textarea name="text" id="textarea" required></textarea>
+
+                <div class="memos-images">
+                    <div class="memos-image-list" id="memos-image-list">
+                        <label class="memos-image-add" id="memos-image-add">
+                            <i class="iconfont icon-add"></i>
+                            <input type="file" id="memos-image-input" accept="image/*" multiple hidden>
+                        </label>
+                    </div>
+                </div>
+
+                <input type="hidden" name="memos_imgs" id="memos_imgs">
+                <input type="hidden" name="_" value="${csrfToken}">
+                <button type="button" id="submit-memos" class="button-submit">发布</button>
+            </form>
+        `;
+    }
+
+    $publishBtn.on('click', function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const commentUrl = document.querySelector('meta[name="comment-url"]')?.getAttribute('content') || '';
+
+        if (!commentUrl) {
+            layer.msg('评论接口不存在');
+            return;
+        }
+
+        clearQueue();
+
+        layerIndex = layer.open({
+            type: 1,
+            move: false,
+            skin: 'layui-memos',
+            area: ['420px', 'auto'],
+            title: ' ',
+            shadeClose: true,
+            closeBtn: 1,
+            content: buildFormHtml(commentUrl, csrfToken),
+            success: updateLayerHeight,
+            end: function () {
+                // 关闭弹框时释放预览 URL，避免内存泄漏
+                clearQueue();
+            }
+        });
+    });
+
+    // 插件未启用：不注册图片相关事件
+    if (!imageEnabled) {
+        // 仅保留发布逻辑
+    } else {
+        // 选择图片：仅当插件启用时才会出现该 input
+        $(document).on('change', '#memos-image-input', function () {
+            const files = this.files;
+            if (!files || !files.length) return;
+
+            if (fileQueue.length + files.length > 9) {
+                layer.msg('最多只能上传 9 张图片');
+                this.value = '';
                 return;
             }
-            // 使用 AJAX 提交表单
-            const formData = $('#comment-form').serialize(); 
+
+            Array.from(files).forEach(file => {
+                if (!file.type || !file.type.startsWith('image/')) {
+                    layer.msg('仅支持图片文件');
+                    return;
+                }
+
+                const id = Date.now() + '-' + Math.random().toString(36).slice(2);
+                const previewUrl = URL.createObjectURL(file);
+                fileQueue.push({ id, file, previewUrl });
+
+                $('#memos-image-add').before(`
+                    <div class="memos-image-item" data-id="${id}">
+                        <img src="${previewUrl}">
+                        <span class="remove">×</span>
+                        <div class="progress-text">0%</div>
+                    </div>
+                `);
+            });
+
+            updateAddButtonVisibility();
+            this.value = '';
+        });
+
+        // 删除图片
+        $(document).on('click', '.memos-image-item .remove', function () {
+            const $item = $(this).closest('.memos-image-item');
+            const id = $item.data('id');
+
+            fileQueue = fileQueue.filter(f => {
+                if (f.id === id) {
+                    try { URL.revokeObjectURL(f.previewUrl); } catch (e) {}
+                    return false;
+                }
+                return true;
+            });
+
+            $item.remove();
+            updateAddButtonVisibility();
+        });
+    }
+
+    function uploadFile(fileItem) {
+        return new Promise((resolve, reject) => {
+            const $item = $(`.memos-image-item[data-id="${fileItem.id}"]`);
+            const $text = $item.find('.progress-text');
+
+            let last = 0;
+            const setPercent = (p) => {
+                const percent = Math.max(last, Math.min(100, p));
+                last = percent;
+
+                if (percent >= 100) {
+                    $item.removeClass('loading').addClass('processing');
+                    $text.text('正在处理');
+                } else {
+                    $item.addClass('loading');
+                    $text.text(percent + '%');
+                }
+            };
+
+            setPercent(0);
+
+            if (useCos) {
+                const signForm = new FormData();
+                signForm.append('fileName', fileItem.file.name);
+
+                $.ajax({
+                    url: signUrl,
+                    type: 'POST',
+                    data: signForm,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success(res) {
+                        if (!res || !res.uploadUrl || !res.publicUrl) {
+                            reject(res && res.error ? res.error : '签名失败');
+                            return;
+                        }
+
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('PUT', res.uploadUrl, true);
+
+                        xhr.upload.addEventListener('progress', function (e) {
+                            if (e.lengthComputable) {
+                                setPercent(Math.round((e.loaded / e.total) * 100));
+                            }
+                        }, false);
+
+                        xhr.upload.addEventListener('load', function () {
+                            setPercent(100);
+                        }, false);
+
+                        xhr.onload = function () {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(res.publicUrl);
+                            } else {
+                                console.error('COS PUT failed', xhr.status, xhr.responseText);
+                                reject('COS 上传失败(' + xhr.status + ')');
+                            }
+                        };
+
+                        xhr.onerror = function () {
+                            reject('COS 上传失败');
+                        };
+
+                        xhr.send(fileItem.file);
+                    },
+                    error(xhr) {
+                        console.error('memos-sign error', xhr && xhr.status, xhr && xhr.responseText);
+                        reject('签名接口不可用');
+                    }
+                });
+
+                return;
+            }
+
+            // 本地上传
+            const formData = new FormData();
+            formData.append('file', fileItem.file);
+
             $.ajax({
-                url: commentUrl,
+                url: uploadUrl,
                 type: 'POST',
                 data: formData,
-                success: function (response) {
-                    if (response && response.error) {
-                        layer.msg(response.error, { icon: 2 });
-                    } else {
-                        layer.closeAll(); 
-                        layer.msg('发布成功！'); 
-                        
-                        // 延迟2秒后刷新页面
-                        setTimeout(function() {
-                            location.reload(); 
-                        }, 1500); // 延迟1.5s刷新页面
-
-                    }
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                xhr() {
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            setPercent(Math.round((e.loaded / e.total) * 100));
+                        }
+                    }, false);
+                    xhr.upload.addEventListener('load', function () {
+                        setPercent(100);
+                    }, false);
+                    return xhr;
                 },
-                error: function () {
-                    layer.msg('发布失败，请稍后重试！', { icon: 2 });
+                success(res) {
+                    setPercent(100);
+                    if (res && res.url) resolve(res.url);
+                    else reject(res && res.error ? res.error : '图片上传失败');
+                },
+                error() {
+                    $item.removeClass('loading processing');
+                    $text.text('');
+                    reject('图片上传失败（接口不可用）');
                 }
             });
         });
+    }
+
+    // 发布（无论插件是否启用都要支持）
+    $(document).on('click', '#submit-memos', function () {
+        if (uploading) return;
+
+        const text = $('#textarea').val().trim();
+        if (!text) {
+            layer.msg('请输入内容');
+            return;
+        }
+
+        uploading = true;
+        const $btn = $('#submit-memos');
+        $btn.prop('disabled', true).addClass('is-disabled').text('正在发布...');
+
+        const reset = () => {
+            $('.memos-image-item')
+                .removeClass('loading processing')
+                .find('.progress-text').text('');
+        };
+
+        const submitComment = () => {
+            $.ajax({
+                url: $('#comment-form').attr('action'),
+                type: 'POST',
+                data: $('#comment-form').serialize(),
+                success(res) {
+                    if (res && res.error) layer.msg(res.error);
+                    else {
+                        layer.closeAll();
+                        layer.msg('发布成功');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                },
+                error() {
+                    layer.msg('发布失败');
+                },
+                complete() {
+                    reset();
+                    uploading = false;
+                    $btn.prop('disabled', false).removeClass('is-disabled').text('发布');
+                }
+            });
+        };
+
+        // 插件未启用：没有图片字段，直接提交
+        if (!imageEnabled) {
+            submitComment();
+            return;
+        }
+
+        // 插件启用但未选图：清空 memos_imgs 直接提交
+        if (!fileQueue.length) {
+            $('#memos_imgs').val('');
+            submitComment();
+            return;
+        }
+
+        Promise.all(fileQueue.map(uploadFile))
+            .then(urls => {
+                $('#memos_imgs').val(JSON.stringify(urls));
+                submitComment();
+            })
+            .catch(err => {
+                reset();
+                uploading = false;
+                $btn.prop('disabled', false).removeClass('is-disabled').text('发布');
+                layer.msg(err);
+            });
     });
 });
-
-/**动态发布弹框结束**/
 
 /***评论点赞以及计数***/
 $(document).ready(function() {
@@ -783,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', initProtectEye);
 
 /**开源不易，请尊重作者的版权，保留本信息**/
 function showConsoleInfo() {
-    const version = '3.6.4';
+    const version = '3.6.5';
     const copyright = '自豪地使用OneBlog主题';
     console.log('\n' + ' %c 当前版本：' + version + '  ' + copyright + '  %c https://oneblog.net  ' + '\n', 'color: #fadfa3; background: #030307; padding:5px 0;', 'background: #fadfa3; padding:5px 0;');
     console.log('开源不易，请尊重作者版权，保留基本的版权信息。');
