@@ -697,9 +697,12 @@ function MemosList($comments, $user) { ?>
                     <?php $count = count($imgs); ?>
                     <div class="memos-img-grid grid-<?php echo $count; ?>">
                         <?php foreach ($imgs as $img) : ?>
-                            <?php $thumb = getMemosThumbUrl($img); ?>
+                            <?php 
+                            $thumb = getMemosThumbUrl($img);
+                            $fullUrl = getMemosImageUrl($img);
+                            ?>
                             <div class="memos-img-item">
-                                <a href="<?php echo htmlspecialchars($img); ?>"
+                                <a href="<?php echo htmlspecialchars($fullUrl); ?>"
                                    data-fancybox="memos-<?php echo $comments->coid; ?>"
                                    data-caption="<?php echo $comments->content(); ?>">
                                     <img class="lazy-load"
@@ -775,6 +778,13 @@ function getMemosImages($coid)
  */
 function getMemosThumbUrl($url)
 {
+    if (is_array($url)) {
+        $url = $url['thumb'] ?? $url['url'] ?? '';
+    }
+    if (empty($url)) {
+        return '';
+    }
+    
     $append = '';
     try {
         $plugin = Helper::options()->plugin('MemosImage');
@@ -794,6 +804,47 @@ function getMemosThumbUrl($url)
     return $append !== '' ? ($url . $append) : $url;
 }
 
+/**
+ * 获取微语图片URL（兼容新旧格式）
+ */
+function getMemosImageUrl($img)
+{
+    if (is_array($img)) {
+        return $img['url'] ?? '';
+    }
+    return $img;
+}
+
+/**
+ * 渲染微语图片上传组件
+ */
+function memosImageUploader()
+{
+    if (!isMemosImageEnabled()) {
+        return;
+    }
+    
+    $user = Typecho_Widget::widget('Widget_User');
+    if (!$user->hasLogin()) {
+        return;
+    }
+    
+    $pluginOptions = Helper::options()->plugin('MemosImage');
+    $maxFiles = $pluginOptions->maxFiles ?: 9;
+    $pluginUrl = Helper::options()->pluginUrl;
+    ?>
+    <div id="memos-upload-area" class="memos-upload-area">
+        <div class="memos-upload-trigger" id="memos-upload-area">
+            <i class="iconfont icon-add"></i>
+            <span>添加图片</span>
+            <span class="upload-count">0/<?php echo $maxFiles; ?></span>
+        </div>
+        <input type="file" id="memos-image-input" accept="image/*" multiple>
+        <div id="memos-image-preview" class="memos-upload-preview"></div>
+    </div>
+    <input type="hidden" name="memos_imgs" value="">
+    <?php
+}
 
 //修复评论区域xss注入漏洞 2026.1.13
 function oneblog_comment_submit(){
