@@ -1,6 +1,6 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
- * 书单分类页面
+ * 书单页面
  *
  * @package custom
  */
@@ -61,6 +61,13 @@ $this->need('header.php');
     justify-content: center;
 }
 
+.book-author {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}
+
 @media (max-width: 768px) {
     .books-grid {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -87,36 +94,46 @@ $this->need('header.php');
 <div class="main">
     <?php $this->need('module/head.php'); ?>
     
-    <div class="category-header m blur" style="background-image: url('<?php $info = CatInfo($this->getDescription()); echo $info['img']; ?>');">
+    <div class="category-header m blur" style="background-image: url('<?php $this->options->themeUrl('/static/img/bg.jpg'); ?>');">
         <div class="category-info">
-            <h1><?php $this->archiveTitle('%s', '', ''); ?></h1>
-            <span><?php echo $info['info']; ?></span>
+            <h1>书单</h1>
+            <span>记录读过的每一本书</span>
         </div>
     </div>
     
     <div class="books-container blur">
-        <?php if ($this->have()): ?>
+        <?php 
+        // 从插件数据表获取书籍
+        try {
+            $db = Typecho_Db::get();
+            $prefix = $db->getPrefix();
+            $books = $db->fetchAll($db->select()->from($prefix . 'content_manager_books')->order('created', Typecho_Db::SORT_DESC));
+            
+            if (!empty($books)): 
+        ?>
         <div class="books-grid">
-            <?php while($this->next()): ?>
-            <a href="<?php $this->permalink() ?>" class="book-item">
+            <?php foreach ($books as $book): ?>
+            <div class="book-item">
                 <div class="book-thumb">
-                    <img class="lazy-load" data-src="<?php echo $this->fields->thumb ? $this->fields->thumb : $this->options->themeUrl . '/static/img/bg.jpg'; ?>" src="<?php echo $this->fields->thumb ? $this->fields->thumb : $this->options->themeUrl . '/static/img/bg.jpg'; ?>">
+                    <img class="lazy-load" data-src="<?php echo $book['cover']; ?>" src="<?php echo $book['cover']; ?>">
                 </div>
-                <div class="book-name"><?php echo $this->title ? $this->title : '请填写书名'; ?></div>
-            </a>
-            <?php endwhile; ?>
-        </div>
-        
-        <div class="load blur" id="loadmore">
-             <?php $this->pageLink('点击查看更多','next'); ?>
+                <div class="book-name"><?php echo $book['title']; ?></div>
+                <div class="book-author"><?php echo $book['author']; ?></div>
+            </div>
+            <?php endforeach; ?>
         </div>
         <?php else: ?>
         <div class="nodata blur">
             <img src='<?php $this->options->themeUrl('static/img/nodata.svg'); ?>'></img>
-            <span>暂无相关内容</span>
-            <a href="<?php $this->options->siteUrl(); ?>">返回首页</a>
+            <span>暂无书籍</span>
         </div>
-        <?php endif; ?>
+        <?php endif; 
+        } catch (Exception $e) {
+            echo '<div class="nodata blur">
+                <span>加载失败: ' . htmlspecialchars($e->getMessage()) . '</span>
+            </div>';
+        }
+        ?>
     </div>
 </div>
 

@@ -1,6 +1,6 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
- * 相册分类页面
+ * 相册页面
  *
  * @package custom
  */
@@ -67,35 +67,44 @@ $this->need('header.php');
 <div class="main">
     <?php $this->need('module/head.php'); ?>
     
-    <div class="category-header m blur" style="background-image: url('<?php $info = CatInfo($this->getDescription()); echo $info['img']; ?>');">
+    <div class="category-header m blur" style="background-image: url('<?php $this->options->themeUrl('/static/img/photo.jpg'); ?>');">
         <div class="category-info">
-            <h1><?php $this->archiveTitle('%s', '', ''); ?></h1>
-            <span><?php echo $info['info']; ?></span>
+            <h1>相册</h1>
+            <span>记录生活中的美好瞬间</span>
         </div>
     </div>
     
     <div class="photos-container blur">
-        <?php if ($this->have()): ?>
+        <?php 
+        // 从插件数据表获取照片
+        try {
+            $db = Typecho_Db::get();
+            $prefix = $db->getPrefix();
+            $photos = $db->fetchAll($db->select()->from($prefix . 'content_manager_photos')->order('created', Typecho_Db::SORT_DESC));
+            
+            if (!empty($photos)): 
+        ?>
         <div class="photos-grid">
-            <?php while($this->next()): ?>
+            <?php foreach ($photos as $photo): ?>
             <div class="photo-item">
-                <a data-fancybox="gallery" data-caption="<?php $this->title(); ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php $this->date('M d, Y'); ?>&nbsp;&nbsp;&nbsp;&nbsp;©&nbsp;<?php echo $this->fields->author ? $this->fields->author() : $this->author(); ?>" href="<?php echo $this->fields->photo ? $this->fields->photo() : $this->fields->thumb(); ?>">
-                    <img class="lazy-load" data-src="<?php echo $this->fields->thumb(); ?>" src="<?php echo $this->fields->thumb(); ?>">
+                <a data-fancybox="gallery" data-caption="<?php echo $photo['title']; ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo date('M d, Y', $photo['created']); ?>&nbsp;&nbsp;&nbsp;&nbsp;©&nbsp;<?php echo $photo['description']; ?>" href="<?php echo $photo['image']; ?>">
+                    <img class="lazy-load" data-src="<?php echo $photo['image']; ?>" src="<?php echo $photo['image']; ?>">
                 </a>
             </div>
-            <?php endwhile; ?>
-        </div>
-        
-        <div class="load blur" id="loadmore">
-             <?php $this->pageLink('点击查看更多','next'); ?>
+            <?php endforeach; ?>
         </div>
         <?php else: ?>
         <div class="nodata blur">
             <img src='<?php $this->options->themeUrl('static/img/nodata.svg'); ?>'></img>
-            <span>暂无相关内容</span>
-            <a href="<?php $this->options->siteUrl(); ?>">返回首页</a>
+            <span>暂无照片</span>
         </div>
-        <?php endif; ?>
+        <?php endif; 
+        } catch (Exception $e) {
+            echo '<div class="nodata blur">
+                <span>加载失败: ' . htmlspecialchars($e->getMessage()) . '</span>
+            </div>';
+        }
+        ?>
     </div>
 </div>
 
