@@ -1,6 +1,6 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
- * 书单页面
+ * 书单分类页面
  *
  * @package custom
  */
@@ -87,14 +87,12 @@ $this->need('header.php');
 <div class="main">
     <?php $this->need('module/head.php'); ?>
     
-    <?php if ($this->is('category')): ?>
     <div class="category-header m blur" style="background-image: url('<?php $info = CatInfo($this->getDescription()); echo $info['img']; ?>');">
         <div class="category-info">
             <h1><?php $this->archiveTitle('%s', '', ''); ?></h1>
             <span><?php echo $info['info']; ?></span>
         </div>
     </div>
-    <?php endif; ?>
     
     <div class="books-container blur">
         <?php if ($this->have()): ?>

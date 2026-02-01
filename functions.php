@@ -599,23 +599,7 @@ function themeInit($archive) {
         commentLikes($archive);
     }
     
-    // 分类页面模板选择
-    if ($archive->is('category')) {
-        $category = $archive->getCategory();
-        $slug = $category['slug'];
-        
-        // 根据分类别名选择模板
-        switch ($slug) {
-            case 'books': // 书单分类别名
-                $archive->setTemplate('books.php');
-                break;
-            case 'photos': // 相册分类别名
-                $archive->setTemplate('photos.php');
-                break;
-            default:
-                break;
-        }
-    }
+
     
     // Ajax 评论
     if ($archive->request->isPost() && 
