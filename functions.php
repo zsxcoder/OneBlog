@@ -599,8 +599,6 @@ function themeInit($archive) {
         commentLikes($archive);
     }
     
-
-    
     // Ajax 评论
     if ($archive->request->isPost() && 
         !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 

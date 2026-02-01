@@ -10,11 +10,6 @@ $this->need('header.php');
 $export = Typecho_Plugin::export();
 $memosImageEnabled = isset($export['activated']['MemosImage']);
 ?>
-<?php if ($memosImageEnabled): ?>
-<link rel="stylesheet" href="<?php $this->options->pluginUrl('MemosImage/memos-image.css'); ?>">
-<script src="<?php $this->options->pluginUrl('MemosImage/memos-image.js'); ?>"></script>
-<?php endif; ?>
-
 <meta name="csrf-token" content="<?php echo Helper::security()->getToken($this->request->getRequestUrl()); ?>">
 <meta name="comment-url" content="<?php $this->commentUrl(); ?>">
 

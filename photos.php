@@ -1,111 +1,74 @@
-<?php if (!defined('__TYPECHO_ROOT_DIR__')) exit;
+<?php
 /**
  * 相册页面
- *
  * @package custom
+ * 本页面依赖于ContentManager插件
  */
+if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 $this->need('header.php');
+$currentPage = max(1, intval($this->request->get('page', 1)));
+
+// 从插件获取照片数据
+$db = Typecho_Db::get();
+$prefix = $db->getPrefix();
+$photoTable = $prefix . 'contentmanager_photo';
+$photos = $db->fetchAll($db->select()->from($photoTable)->order('date', Typecho_Db::SORT_DESC));
 ?>
-<style>
-/* 相册页面样式 */
-.photos-container {
-    padding: 20px;
-}
-
-.photos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    margin: 40px 0;
-}
-
-.photo-item {
-    overflow: hidden;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.photo-item:hover {
-    transform: translateY(-5px);
-}
-
-.photo-item img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.photo-item:hover img {
-    transform: scale(1.05);
-}
-
-@media (max-width: 768px) {
-    .photos-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 15px;
-    }
-    
-    .photo-item img {
-        height: 150px;
-    }
-}
-
-@media (max-width: 480px) {
-    .photos-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
-    }
-    
-    .photo-item img {
-        height: 120px;
-    }
-}
-</style>
-
 <div class="main">
-    <?php $this->need('module/head.php'); ?>
-    
-    <div class="category-header m blur" style="background-image: url('<?php $this->options->themeUrl('/static/img/photo.jpg'); ?>');">
-        <div class="category-info">
-            <h1>相册</h1>
-            <span>记录生活中的美好瞬间</span>
+    <?php $this->need('module/head2.php');?>
+    <!--背景图片+logo-->
+    <div class="page_thumb blur">
+        <!-- 背景图片容器 -->
+        <div class="post_bg lazy-load" data-src="<?php echo $this->fields->thumb ? $this->fields->thumb : Helper::options()->themeUrl . '/static/img/photo.jpg'; ?>"></div>
+        <div class="pc">
+            <!-- 新增的菜单按钮 -->
+            <i class="iconfont icon-nav menu-button"></i>
+            <div class="page-head">
+                <?php if ($this->options->logoStyle == 'text') {?>
+                <h1><a href="<?php $this->options->siteUrl(); ?>"><?php $this->options->title();?></a><span class="soul">生活志</span></h1>
+                <?php }else{ ?>
+                <a class="logo" href="<?php $this->options->siteUrl(); ?>">
+                    <img src="<?php echo $this->options->logoWhite ? $this->options->logoWhite : Helper::options()->themeUrl . '/static/img/logoWhite.svg'; ?>">
+                </a>
+                <?php }?>
+            </div>
+        </div>
+        <div class="m">
+            <h1 class="page-head"><?php $this->archiveTitle(' &raquo; ', ''); ?><span>Scenery along the way</span></h1> 
         </div>
     </div>
-    
-    <div class="photos-container blur">
-        <?php 
-        // 从插件数据表获取照片
-        try {
-            $db = Typecho_Db::get();
-            $prefix = $db->getPrefix();
-            $photos = $db->fetchAll($db->select()->from($prefix . 'content_manager_photos')->order('created', Typecho_Db::SORT_DESC));
-            
-            if (!empty($photos)): 
-        ?>
-        <div class="photos-grid">
+    <div class="page-title animated fadeIn pc">
+        <h1><?php $this->title(); ?></h1>   
+    </div>
+    <div class="photo-contain blur animated fadeIn">
+        <?php if (array_key_exists('ContentManager', Typecho_Plugin::export()['activated'])):?>
+        <!--相册-->
+        <div class="photos" id="photos">
             <?php foreach ($photos as $photo): ?>
-            <div class="photo-item">
-                <a data-fancybox="gallery" data-caption="<?php echo $photo['title']; ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo date('M d, Y', $photo['created']); ?>&nbsp;&nbsp;&nbsp;&nbsp;©&nbsp;<?php echo $photo['description']; ?>" href="<?php echo $photo['image']; ?>">
-                    <img class="lazy-load" data-src="<?php echo $photo['image']; ?>" src="<?php echo $photo['image']; ?>">
+            <div class="photo image-shadow">
+                <a href="<?= $photo['rawUrl'] ?>" data-fancybox="gallery" 
+                   data-caption="<?= $photo['title'] ?>&nbsp;&nbsp;&nbsp;&nbsp;<?= $photo['caption'] ?>&nbsp;&nbsp;&nbsp;&nbsp;<?= date('M d, Y', $photo['date']) ?>">
+                    <img class="lazy-load" data-src="<?= $photo['url'] ?>" />
                 </a>
             </div>
             <?php endforeach; ?>
         </div>
-        <?php else: ?>
-        <div class="nodata blur">
-            <img src='<?php $this->options->themeUrl('static/img/nodata.svg'); ?>'></img>
-            <span>暂无照片</span>
+        <!-- 点击无限加载 -->
+        <div class="load" id="loadmore">
+            <?php if (count($photos) > 0): ?>
+                —&nbsp;&nbsp;&nbsp;暂无更多内容&nbsp;&nbsp;&nbsp;—
+            <?php else: ?>
+                —&nbsp;&nbsp;&nbsp;暂无内容&nbsp;&nbsp;&nbsp;—
+            <?php endif; ?>
         </div>
-        <?php endif; 
-        } catch (Exception $e) {
-            echo '<div class="nodata blur">
-                <span>加载失败: ' . htmlspecialchars($e->getMessage()) . '</span>
-            </div>';
-        }
-        ?>
+        <?php else:?>
+    	<div class="nodata">
+            <img src='<?php $this->options->themeUrl('static/img/nodata.svg'); ?>'></img>
+            <span>暂未启用ContentManager插件，请先安装并启用该插件。</span>
+        </div>
+    	<?php endif;?>
     </div>
 </div>
-
-<?php $this->need('footer.php');?>
+<a id="gototop" class="hidden"><i class="iconfont icon-up"></i></a>
+</div>
+<?php $this->need('footer.php'); ?>
