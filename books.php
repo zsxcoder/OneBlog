@@ -65,10 +65,6 @@ $this->need('header.php'); ?>
     <span class="category-tag" data-category="read">已读完</span>
     <span class="category-tag" data-category="reading">在读</span>
     <span class="category-tag" data-category="want">想读</span>
-    <span class="category-tag" data-category="fiction">小说</span>
-    <span class="category-tag" data-category="non-fiction">非虚构</span>
-    <span class="category-tag" data-category="tech">技术</span>
-    <span class="category-tag" data-category="other">其他</span>
 </div>
 
 <!--书单列表-->
@@ -357,7 +353,7 @@ const booksData = [
         status: "read",
         rating: 5,
         pages: 200,
-        category: "fiction",
+        url: "https://book.douban.com/subject/4913064/",
         description: "讲述了农村人福贵悲惨的人生遭遇。福贵本是个阔少爷，可他嗜赌如命，终于赌光了家业，一贫如洗。",
         tags: ["小说", "中国文学", "人生"]
     },
@@ -369,7 +365,7 @@ const booksData = [
         status: "read",
         rating: 5,
         pages: 360,
-        category: "fiction",
+        url: "https://book.douban.com/subject/10572108/",
         description: "一个家族七代人的故事，涵盖了百年间布恩迪亚家族的兴衰荣辱，以及马孔多小镇的建立、发展与毁灭。",
         tags: ["小说", "魔幻现实主义", "拉美文学"]
     },
@@ -381,7 +377,7 @@ const booksData = [
         status: "reading",
         rating: 4,
         pages: 400,
-        category: "non-fiction",
+        url: "https://book.douban.com/subject/26353653/",
         description: "从十万年前有生命迹象开始到21世纪资本、科技交织的人类发展史，探讨了人类如何成为地球主宰。",
         tags: ["历史", "人类学", "科普"]
     },
@@ -393,7 +389,7 @@ const booksData = [
         status: "read",
         rating: 5,
         pages: 280,
-        category: "fiction",
+        url: "https://book.douban.com/subject/1770782/",
         description: "关于友谊、背叛和救赎的故事。12岁的阿富汗富家少爷阿米尔与仆人哈桑情同手足，却因风筝比赛发生了一件悲惨的事。",
         tags: ["小说", "友情", "救赎"]
     },
@@ -405,7 +401,7 @@ const booksData = [
         status: "reading",
         rating: 4,
         pages: 800,
-        category: "tech",
+        url: "https://book.douban.com/subject/1150604/",
         description: "软件构建领域的权威指南，涵盖了软件开发的各个方面，从代码组织到算法选择，从测试到维护。",
         tags: ["技术", "编程", "软件开发"]
     },
@@ -417,7 +413,7 @@ const booksData = [
         status: "want",
         rating: 0,
         pages: 300,
-        category: "fiction",
+        url: "https://book.douban.com/subject/25862578/",
         description: "一家神奇的杂货店，只要写下烦恼投进店前卷帘门的投信口，第二天就会在店后的牛奶箱里得到回答。",
         tags: ["小说", "悬疑", "治愈"]
     },
@@ -429,7 +425,7 @@ const booksData = [
         status: "want",
         rating: 0,
         pages: 420,
-        category: "non-fiction",
+        url: "https://book.douban.com/subject/10785583/",
         description: "诺贝尔经济学奖得主丹尼尔·卡尼曼的著作，介绍了人类思维的两种模式：快速、直觉的系统1和缓慢、理性的系统2。",
         tags: ["心理学", "经济学", "思维"]
     },
@@ -441,7 +437,7 @@ const booksData = [
         status: "read",
         rating: 5,
         pages: 350,
-        category: "fiction",
+        url: "https://book.douban.com/subject/6518605/",
         description: "地球文明与三体文明的首次接触，揭开了宇宙文明兴衰的宏大序幕。",
         tags: ["科幻", "中国文学", "宇宙"]
     },
@@ -453,7 +449,7 @@ const booksData = [
         status: "read",
         rating: 4,
         pages: 280,
-        category: "tech",
+        url: "https://book.douban.com/subject/1384277/",
         description: "本书强调优秀的设计应该以用户为中心，介绍了产品设计中的人因工程学原理。",
         tags: ["设计", "用户体验", "心理学"]
     },
@@ -465,7 +461,7 @@ const booksData = [
         status: "read",
         rating: 5,
         pages: 320,
-        category: "fiction",
+        url: "https://book.douban.com/subject/1851857/",
         description: "一个证券交易所经纪人放弃优渥生活，追求艺术梦想的故事，探讨了理想与现实、艺术与生活的冲突。",
         tags: ["小说", "理想", "艺术"]
     },
@@ -477,7 +473,7 @@ const booksData = [
         status: "reading",
         rating: 4,
         pages: 500,
-        category: "non-fiction",
+        url: "https://book.douban.com/subject/27608224/",
         description: "桥水基金创始人分享的生活和工作原则，涵盖个人成长、团队管理、投资决策等多个方面。",
         tags: ["商业", "管理", "人生"]
     },
@@ -489,7 +485,7 @@ const booksData = [
         status: "want",
         rating: 0,
         pages: 380,
-        category: "fiction",
+        url: "https://book.douban.com/subject/1008148/",
         description: "以讽刺的笔法描写了抗战初期中国知识分子的众生相，展现了人生的种种困境和矛盾。",
         tags: ["小说", "中国文学", "讽刺"]
     }
@@ -587,14 +583,10 @@ function loadBooks() {
     // 清空当前显示
     booksGrid.innerHTML = '';
     
-    // 根据分类筛选
+    // 根据分类筛选（仅按阅读状态筛选）
     let filteredBooks = allBooks;
     if (BookConfig.currentCategory !== 'all') {
-        if (['read', 'reading', 'want'].includes(BookConfig.currentCategory)) {
-            filteredBooks = allBooks.filter(book => book.status === BookConfig.currentCategory);
-        } else {
-            filteredBooks = allBooks.filter(book => book.category === BookConfig.currentCategory);
-        }
+        filteredBooks = allBooks.filter(book => book.status === BookConfig.currentCategory);
     }
     
     BookConfig.totalBooks = filteredBooks.length;
@@ -672,19 +664,31 @@ function renderBook(book, index, container) {
         ? `<div class="book-tags">${book.tags.map(tag => `<span class="book-tag">${tag}</span>`).join('')}</div>`
         : '';
     
+    // 书籍链接
+    const bookUrl = book.url || '';
+    const bookLink = bookUrl ? `href="${bookUrl}" target="_blank"` : '';
+    
     bookCard.innerHTML = `
         <div class="book-cover">
             <img src="${book.cover}" alt="${book.title}" onerror="this.src='<?php $this->options->themeUrl('static/img/nodata.svg'); ?>'">
             <span class="book-status ${book.status}">${statusText[book.status] || book.status}</span>
         </div>
         <div class="book-info">
-            <h3 class="book-title">${book.title}</h3>
+            <h3 class="book-title">${bookUrl ? `<a ${bookLink}>${book.title}</a>` : book.title}</h3>
             <div class="book-author">${book.author}</div>
             ${ratingHTML}
             <p class="book-description">${book.description || '暂无描述'}</p>
             ${tagsHTML}
         </div>
     `;
+    
+    // 如果有URL，添加点击事件
+    if (bookUrl) {
+        bookCard.style.cursor = 'pointer';
+        bookCard.addEventListener('click', function() {
+            window.open(bookUrl, '_blank');
+        });
+    }
     
     container.appendChild(bookCard);
 }
