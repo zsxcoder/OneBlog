@@ -7,12 +7,80 @@
 
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 $this->need('header.php');
-
 $export = Typecho_Plugin::export();
 $memosImageEnabled = isset($export['activated']['MemosImage']);
 ?>
 <meta name="csrf-token" content="<?php echo Helper::security()->getToken($this->request->getRequestUrl()); ?>">
 <meta name="comment-url" content="<?php $this->commentUrl(); ?>">
+
+<style>
+.memos-img-grid {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    grid-template-columns: repeat(3, 1fr);
+}
+.memos-img-grid.grid-1 {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+}
+.memos-img-grid.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 400px;
+}
+.memos-img-grid.grid-1 img,
+.memos-img-grid.grid-2 img {
+    aspect-ratio: 16/10;
+    object-fit: cover;
+}
+.memos-img-grid a {
+    display: block;
+    overflow: hidden;
+    border-radius: 8px;
+}
+.memos-img-grid img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.memos-img-grid img:hover {
+    transform: scale(1.05);
+}
+@media (max-width: 480px) {
+    .memos-img-grid {
+        gap: 4px;
+    }
+    .memos-img-grid.grid-1,
+    .memos-img-grid.grid-2 {
+        max-width: 100%;
+    }
+}
+.memos-video {
+    margin-top: 12px;
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+}
+.memos-video iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+@media (max-width: 480px) {
+    .memos-video {
+        margin-top: 8px;
+        border-radius: 4px;
+    }
+}
+</style>
 
 <div class="main">
 <?php $this->need('module/head2.php'); ?>
@@ -54,44 +122,7 @@ $memosImageEnabled = isset($export['activated']['MemosImage']);
     </div>
 </div>
 
-<?php if ($memosImageEnabled): ?>
-<link rel="stylesheet" href="<?php Helper::options()->pluginUrl('MemosImage/style.css'); ?>" type="text/css" />
-<?php endif; ?>
-
-<style>
-#respond .rich-editor {
-    min-height: 100px;
-}
-#memos-upload-area {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    margin: 10px 0;
-    gap: 8px;
-}
-#memos-image-input {
-    display: none;
-}
-</style>
-
-<?php if ($memosImageEnabled && $this->user->hasLogin()): ?>
-<script src="<?php Helper::options()->pluginUrl('MemosImage/upload.js'); ?>"></script>
-<?php endif; ?>
-
-<script>
-var loginAction = "<?php echo $this->options->loginAction(); ?>";
-var commentLikeUrl = "<?php Helper::options()->index('?commentLike=dz'); ?>";
-<?php if ($memosImageEnabled): ?>
-<?php $plugin = $this->options->plugin('MemosImage'); ?>
-window.memosConfig = Object.assign({}, window.memosConfig || {}, {
-    enabled: true,
-    uploadMode: "<?php echo $plugin->uploadMode ?: 'local'; ?>",
-    uploadUrl: "<?php Helper::options()->index('/action/memos-upload'); ?>",
-    signUrl: "<?php Helper::options()->index('/action/memos-sign'); ?>"
-});
-<?php endif; ?>
-</script>
-
+<!-- 微语列表 -->
 <div id="comments" class="memos padding animated fadeIn blur">
     <?php $this->comments()->to($comments); ?>
     <?php if ($comments->have()) : ?>
@@ -119,62 +150,35 @@ window.memosConfig = Object.assign({}, window.memosConfig || {}, {
 </div>
 
 <script>
+    var loginAction = "<?php echo $this->options->loginAction(); ?>";
+    var commentLikeUrl = "<?php Helper::options()->index('?commentLike=dz'); ?>";
+    <?php if ($memosImageEnabled) : ?>
+    <?php $plugin = $this->options->plugin('MemosImage'); ?>
+    window.memosConfig = Object.assign({}, window.memosConfig || {}, {
+        enabled: true,
+        memosUseCos: "<?php echo $plugin->uploadMode ?: 'local'; ?>" === 'cos',
+        memosUploadUrl: "<?php Helper::options()->index('/action/memos-upload'); ?>",
+        memosSignUrl: "<?php Helper::options()->index('/action/memos-sign'); ?>"
+    });
+    <?php endif; ?>
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', function() {
-    var publishBtn = document.getElementById('publish-button');
-    var loginBtn = document.getElementById('login-button');
-
-    if (publishBtn) {
-        publishBtn.addEventListener('click', function() {
-            var respond = document.getElementById('respond');
-            if (respond) {
-                respond.scrollIntoView({ behavior: 'smooth' });
-                var editor = respond.querySelector('.rich-editor');
-                if (editor) {
-                    editor.focus();
-                }
-            }
+    if (typeof jQuery !== 'undefined' && typeof jQuery.fancybox !== 'undefined') {
+        jQuery('[data-fancybox^="memos-"]').fancybox({
+        loop: true,
+        buttons: [
+            'slideShow',
+            'fullScreen',
+            'thumbs',
+            'close'
+        ],
+        protect: true,
+        caption: function(fancybox, slide) {
+            return slide.caption || '';
+        }
         });
-    }
-
-    if (loginBtn) {
-        loginBtn.addEventListener('click', function() {
-            if (typeof layer !== 'undefined') {
-                layer.open({
-                    type: 2,
-                    title: '登录',
-                    area: ['400px', '450px'],
-                    content: loginAction
-                });
-            } else {
-                var loginForm = document.querySelector('.memos-form');
-                if (loginForm) {
-                    loginForm.style.display = 'flex';
-                }
-            }
-        });
-    }
-
-    var commentForm = document.getElementById('comment-form');
-    if (commentForm) {
-        commentForm.addEventListener('submit', function(e) {
-            var textarea = commentForm.querySelector('textarea[name="text"]');
-            var editor = commentForm.querySelector('.rich-editor');
-            var memosImgs = commentForm.querySelector('input[name="memos_imgs"]');
-
-            if (editor && editor.innerHTML) {
-                textarea.value = editor.innerHTML;
-            }
-
-            if (memosImgs && !memosImgs.value && editor && editor.innerHTML.trim() === '') {
-                e.preventDefault();
-                alert('请输入内容或上传图片');
-                return false;
-            }
-        });
-    }
-
-    if (typeof MemosUploader !== 'undefined') {
-        MemosUploader.init();
     }
 });
 </script>

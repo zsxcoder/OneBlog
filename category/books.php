@@ -1,25 +1,11 @@
 <?php
 /**
- * 书单列表页
+ * 书单列表页面
  * @package custom
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 $this->need('header.php');
-
-$db = Typecho_Db::get();
-$prefix = $db->getPrefix();
-$booksCategory = $db->fetchRow($db->select()->from('table.metas')->where('slug = ?', 'books')->where('type = ?', 'category')->limit(1));
-
-if (!$booksCategory) {
-    echo '<div class="main">';
-    $this->need('module/head2.php');
-    echo '<div class="post_content"><div class="nodata"><img src="' . $this->options->themeUrl . '/static/img/nodata.svg"><span>请先创建名为"books"的书单分类</span></div></div></div>';
-    $this->need('footer.php');
-    exit;
-}
-
-$booksCategoryId = $booksCategory['mid'];
 ?>
 <div class="main">
     <?php $this->need('module/head2.php'); ?>
@@ -42,10 +28,9 @@ $booksCategoryId = $booksCategory['mid'];
         </div>
     </div>
     <div class="page-title animated fadeIn pc">
-        <h1><?php echo $booksCategory['name']; ?></h1>
+        <h1><?php $this->archiveTitle(' &raquo; ', ''); ?></h1>
     </div>
     <div class="post_content animated fadeIn">
-        <?php if ($this->have()): ?>
         <div class="books" id="books">
             <?php while($this->next()): ?>
             <a href="<?php $this->permalink() ?>" class="book">
@@ -58,12 +43,6 @@ $booksCategoryId = $booksCategory['mid'];
         <div class="pageload" id="no_more">
             <?php $this->pageNav('', ''); ?>
         </div>
-        <?php else: ?>
-        <div class="nodata">
-            <img src="<?php $this->options->themeUrl('static/img/nodata.svg'); ?>">
-            <span>书单为空，请发布书籍类文章</span>
-        </div>
-        <?php endif; ?>
     </div>
 </div>
 <a id="gototop" class="hidden"><i class="iconfont icon-up"></i></a>

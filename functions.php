@@ -185,13 +185,7 @@ function themeConfig($form) {
     $GeetestKEY = new Typecho_Widget_Helper_Form_Element_Text('GeetestKEY', NULL, NULL, _t('极验KEY'), _t('如需开启评论提交前的极验验证，请填写极验后台生成的 验证KEY'));
     $form->addInput($GeetestKEY);
     
-    $FriendCircleAPI = new Typecho_Widget_Helper_Form_Element_Text('FriendCircleAPI', NULL, 'https://fc.mcyzsx.top/', _t('友链朋友圈API'), _t('请填写友链朋友圈的API地址'));
-    $form->addInput($FriendCircleAPI);
     
-    $FriendCirclePageSize = new Typecho_Widget_Helper_Form_Element_Text('FriendCirclePageSize', NULL, '15', _t('友链朋友圈每页数量'), _t('请填写友链朋友圈每页显示的文章数量'));
-    $form->addInput($FriendCirclePageSize);
-
-
     //—————————————————————————————————————— 社交按钮 ——————————————————————————————————————
 
     $QQ = new Typecho_Widget_Helper_Form_Element_Text('QQ', NULL, NULL, _t('QQ'), _t('请填写完整的QQ群描述或QQ号描述，输入的内容会直接作为弹框消息显示。'));
@@ -205,18 +199,6 @@ function themeConfig($form) {
     
     $Github = new Typecho_Widget_Helper_Form_Element_Text('Github', NULL, NULL, _t('Github'), _t('请填写Github地址。'));
     $form->addInput($Github);
-    
-    $Telegram = new Typecho_Widget_Helper_Form_Element_Text('Telegram', NULL, NULL, _t('Telegram'), _t('请填写Telegram地址。'));
-    $form->addInput($Telegram);
-    
-    $Mastodon = new Typecho_Widget_Helper_Form_Element_Text('Mastodon', NULL, NULL, _t('Mastodon'), _t('请填写Mastodon地址。'));
-    $form->addInput($Mastodon);
-    
-    $X = new Typecho_Widget_Helper_Form_Element_Text('X', NULL, NULL, _t('X'), _t('请填写X地址。'));
-    $form->addInput($X);
-    
-    $BiliBili = new Typecho_Widget_Helper_Form_Element_Text('BiliBili', NULL, NULL, _t('BiliBili'), _t('请填写BiliBili地址。'));
-    $form->addInput($BiliBili);
     
     //—————————————————————————————————————— 自定义样式 ——————————————————————————————————————
     // 自定义CSS
@@ -248,9 +230,29 @@ function themeFields($layout) { ?>
     $origin->input->setAttribute('class', 'full-width-input');
     $layout->addItem($origin);  
     
-    $author = new Typecho_Widget_Helper_Form_Element_Text('author', NULL, NULL, _t('作者'), _t('不填则默认为原创文章，作者为账号本人。'));
+    $author = new Typecho_Widget_Helper_Form_Element_Text('author', NULL, NULL, _t('作者'), _t('不填则默认为原创文章，作者为账号本人。建议根据内容权属填写著作权人，书单填写书籍作者，相册填写摄影师姓名。'));
     $author->input->setAttribute('class', 'full-width-input');
     $layout->addItem($author); 
+    
+    /**文章分类为相册时的专用字段**/
+    $photo = new Typecho_Widget_Helper_Form_Element_Text('photo', NULL, NULL, _t('照片原图'), _t('相册专用字段，相册类文章必填，在这里填入照片的原图地址，未填写则直接调用填写的封面图片。'));
+    $photo->input->setAttribute('class', 'full-width-input');
+    $layout->addItem($photo);
+    
+    /**文章分类为书单时的专用字段**/
+    $bookYear = new Typecho_Widget_Helper_Form_Element_Text('bookYear', NULL, NULL, _t('出版日期'), _t('书单专用字段，填你所读版本的出版日期，格式：2000年6月'));
+    $bookYear->input->setAttribute('class', 'full-width-input');
+    $layout->addItem($bookYear);   
+    
+    $bookCat = new Typecho_Widget_Helper_Form_Element_Select('bookCat', array(
+        '随笔' => '随笔',
+        '散文'=> '散文',
+        '记事' =>'记事',
+        '诗集' => '诗集',
+        '小说' => '小说',
+        '其他' => '其他'
+        ),'散文', _t('书籍分类'), _t('书单专用字段，书籍的分类'));
+    $layout->addItem($bookCat);
 }
 
 //自定义菜单
@@ -594,6 +596,10 @@ function showThumbnail($widget){
 
 //挂载点赞路径 + Ajax评论
 function themeInit($archive) {
+    if ($archive->is('category', 'books') || $archive->is('category', 'photos')) {
+        $archive->parameter->pageSize = 24;
+    }
+    
     // 评论点赞
     if ($archive->request->is("commentLike=dz")) {
         commentLikes($archive);
@@ -674,7 +680,16 @@ function commentLikes($archive){
 }
 
 // 微语数据加载
-function MemosList($comments, $user) { ?>
+function MemosList($comments, $user) {
+    $db = \Typecho\Db::get();
+    $row = $db->fetchRow($db->select('text')->from('table.comments')->where('coid = ?', $comments->coid));
+    $rawContent = $row['text'] ?? '';
+    $content = $comments->content;
+    $markdownImages = parseMarkdownImages($rawContent);
+    $bilibiliVideos = parseBilibiliVideos($rawContent);
+    $content = removeMarkdownImages($content);
+    $content = removeBilibiliLinks($content);
+    ?>
     <li class="animated fadeIn">
         <div id="<?php echo $comments->theId(); ?>">
             <div class="user">
@@ -689,22 +704,28 @@ function MemosList($comments, $user) { ?>
                 </div>
             </div>
 
-            <?php echo $comments->content(); ?>
+            <?php echo $content; ?>
 
             <?php if (isMemosImageEnabled()) : ?>
                 <?php $imgs = getMemosImages($comments->coid); ?>
-                <?php if (!empty($imgs)) : ?>
-                    <?php $count = count($imgs); ?>
+                <?php $allImages = array_merge($imgs, $markdownImages); ?>
+                <?php if (!empty($allImages)) : ?>
+                    <?php $count = min(count($allImages), 9); ?>
                     <div class="memos-img-grid grid-<?php echo $count; ?>">
-                        <?php foreach ($imgs as $img) : ?>
+                        <?php foreach ($allImages as $img) : ?>
                             <?php 
-                            $thumb = getMemosThumbUrl($img);
-                            $fullUrl = getMemosImageUrl($img);
+                            if (is_array($img)) {
+                                $url = $img['url'] ?? $img;
+                                $thumb = $img['thumb'] ?? $url;
+                            } else {
+                                $url = $img;
+                                $thumb = $img;
+                            }
                             ?>
                             <div class="memos-img-item">
-                                <a href="<?php echo htmlspecialchars($fullUrl); ?>"
+                                <a href="<?php echo htmlspecialchars($url); ?>"
                                    data-fancybox="memos-<?php echo $comments->coid; ?>"
-                                   data-caption="<?php echo $comments->content(); ?>">
+                                   data-caption="微语配图">
                                     <img class="lazy-load"
                                          src="<?php echo htmlspecialchars($thumb); ?>"
                                          data-src="<?php echo htmlspecialchars($thumb); ?>">
@@ -713,6 +734,31 @@ function MemosList($comments, $user) { ?>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+            <?php elseif (!empty($markdownImages)) : ?>
+                <?php $count = min(count($markdownImages), 9); ?>
+                <div class="memos-img-grid grid-<?php echo $count; ?>">
+                    <?php foreach ($markdownImages as $img) : ?>
+                        <?php 
+                        $url = is_array($img) ? ($img['url'] ?? $img) : $img;
+                        $thumb = is_array($img) ? ($img['thumb'] ?? $url) : $url;
+                        ?>
+                        <div class="memos-img-item">
+                            <a href="<?php echo htmlspecialchars($url); ?>"
+                               data-fancybox="memos-<?php echo $comments->coid; ?>"
+                               data-caption="微语配图">
+                                <img class="lazy-load"
+                                     src="<?php echo htmlspecialchars($thumb); ?>"
+                                     data-src="<?php echo htmlspecialchars($thumb); ?>">
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($bilibiliVideos)) : ?>
+                <?php foreach ($bilibiliVideos as $bvid) : ?>
+                    <?php echo renderBilibiliVideo($bvid); ?>
+                <?php endforeach; ?>
             <?php endif; ?>
 
             <?php
@@ -778,13 +824,6 @@ function getMemosImages($coid)
  */
 function getMemosThumbUrl($url)
 {
-    if (is_array($url)) {
-        $url = $url['thumb'] ?? $url['url'] ?? '';
-    }
-    if (empty($url)) {
-        return '';
-    }
-    
     $append = '';
     try {
         $plugin = Helper::options()->plugin('MemosImage');
@@ -804,47 +843,6 @@ function getMemosThumbUrl($url)
     return $append !== '' ? ($url . $append) : $url;
 }
 
-/**
- * 获取微语图片URL（兼容新旧格式）
- */
-function getMemosImageUrl($img)
-{
-    if (is_array($img)) {
-        return $img['url'] ?? '';
-    }
-    return $img;
-}
-
-/**
- * 渲染微语图片上传组件
- */
-function memosImageUploader()
-{
-    if (!isMemosImageEnabled()) {
-        return;
-    }
-    
-    $user = Typecho_Widget::widget('Widget_User');
-    if (!$user->hasLogin()) {
-        return;
-    }
-    
-    $pluginOptions = Helper::options()->plugin('MemosImage');
-    $maxFiles = $pluginOptions->maxFiles ?: 9;
-    $pluginUrl = Helper::options()->pluginUrl;
-    ?>
-    <div id="memos-upload-area" class="memos-upload-area">
-        <div class="memos-upload-trigger" id="memos-upload-area">
-            <i class="iconfont icon-add"></i>
-            <span>添加图片</span>
-            <span class="upload-count">0/<?php echo $maxFiles; ?></span>
-        </div>
-        <input type="file" id="memos-image-input" accept="image/*" multiple>
-        <div id="memos-image-preview" class="memos-upload-preview"></div>
-    </div>
-    <input type="hidden" name="memos_imgs" value="">
-    <?php
-}
 
 //修复评论区域xss注入漏洞 2026.1.13
 function oneblog_comment_submit(){
@@ -1072,3 +1070,70 @@ function redirect_404(){
 
 // 在页面加载之前调用
 Typecho_Plugin::factory('Widget_Archive')->beforeRender = 'redirect_404';
+
+function parseMarkdownImages($content) {
+    $images = [];
+    $pattern = '/!\[([^\]]*)\]\(([^)]+)\)/';
+    if (preg_match_all($pattern, $content, $matches)) {
+        foreach ($matches[2] as $url) {
+            $url = trim($url);
+            if (!empty($url)) {
+                $images[] = $url;
+            }
+        }
+    }
+    if (empty($images)) {
+        $imgPattern = '/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/i';
+        if (preg_match_all($imgPattern, $content, $matches)) {
+            foreach ($matches[1] as $url) {
+                $url = trim($url);
+                if (!empty($url)) {
+                    $images[] = $url;
+                }
+            }
+        }
+    }
+    return $images;
+}
+
+function removeMarkdownImages($content) {
+    $content = preg_replace('/!\[([^\]]*)\]\(([^)]+)\)/', '', $content);
+    $content = preg_replace('/<img[^>]+src=["\'][^"\']+["\'][^>]*>/i', '', $content);
+    return $content;
+}
+
+function parseBilibiliVideos($content) {
+    $videos = [];
+    $pattern = '/bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/i';
+    if (preg_match_all($pattern, $content, $matches)) {
+        foreach ($matches[1] as $bvid) {
+            $bvid = trim($bvid);
+            if (!empty($bvid) && !in_array($bvid, $videos)) {
+                $videos[] = $bvid;
+            }
+        }
+    }
+    if (empty($videos)) {
+        $pattern2 = '/\b(BV1[a-zA-Z0-9]{10})\b/i';
+        if (preg_match_all($pattern2, $content, $matches)) {
+            foreach ($matches[1] as $bvid) {
+                $bvid = trim($bvid);
+                if (!empty($bvid) && !in_array($bvid, $videos)) {
+                    $videos[] = $bvid;
+                }
+            }
+        }
+    }
+    return $videos;
+}
+
+function renderBilibiliVideo($bvid) {
+    return '<div class="memos-video bilibili-video">' .
+           '<iframe src="//player.bilibili.com/player.html?bvid=' . $bvid . '&page=1&high_quality=1" ' .
+           'allowfullscreen="allowfullscreen" frameborder="no" loading="lazy"></iframe>' .
+           '</div>';
+}
+
+function removeBilibiliLinks($content) {
+    return preg_replace('/https?:\/\/(?:www\.)?bilibili\.com\/video\/BV[a-zA-Z0-9]+\/?/i', '', $content);
+}

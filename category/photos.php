@@ -1,40 +1,26 @@
 <?php
 /**
- * 相册页面
+ * 相册列表页面
  * @package custom
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 $this->need('header.php');
-
-$db = Typecho_Db::get();
-$prefix = $db->getPrefix();
-$photosCategory = $db->fetchRow($db->select()->from('table.metas')->where('slug = ?', 'photos')->where('type = ?', 'category')->limit(1));
-
-if (!$photosCategory) {
-    echo '<div class="main">';
-    $this->need('module/head2.php');
-    echo '<div class="post_content"><div class="nodata"><img src="' . $this->options->themeUrl . '/static/img/nodata.svg"><span>请先创建名为"photos"的相册分类</span></div></div></div>';
-    $this->need('footer.php');
-    exit;
-}
-
-$photosCategoryId = $photosCategory['mid'];
 ?>
 <div class="main">
-    <?php $this->need('module/head2.php');?>
+    <?php $this->need('module/head2.php'); ?>
     <div class="page_thumb blur">
         <div class="post_bg lazy-load" data-src="<?php echo $this->fields->thumb ? $this->fields->thumb : $this->options->themeUrl . '/static/img/photo.jpg'; ?>"></div>
         <div class="pc">
             <i class="iconfont icon-nav menu-button"></i>
             <div class="page-head">
-                <?php if ($this->options->logoStyle == 'text') {?>
+                <?php if ($this->options->logoStyle == 'text'): ?>
                 <h1><a href="<?php $this->options->siteUrl(); ?>"><?php $this->options->title(); ?></a><span class="soul">生活志</span></h1>
-                <?php }else{ ?>
+                <?php else: ?>
                 <a class="logo" href="<?php $this->options->siteUrl(); ?>">
                     <img src="<?php echo $this->options->logoWhite ? $this->options->logoWhite : $this->options->themeUrl . '/static/img/logoWhite.svg'; ?>">
                 </a>
-                <?php }?>
+                <?php endif; ?>
             </div>
         </div>
         <div class="m">
@@ -42,10 +28,9 @@ $photosCategoryId = $photosCategory['mid'];
         </div>
     </div>
     <div class="page-title animated fadeIn pc">
-        <h1><?php echo $photosCategory['name']; ?></h1>   
+        <h1><?php $this->archiveTitle(' &raquo; ', ''); ?></h1>   
     </div>
     <div class="post_content animated fadeIn">
-        <?php if ($this->have()): ?>
         <div class="photos" id="photos">
             <?php while($this->next()): ?>
             <div class="photo image-shadow">
@@ -70,12 +55,6 @@ $photosCategoryId = $photosCategory['mid'];
         <div class="pageload" id="no_more">
             <?php $this->pageNav('', ''); ?>
         </div>
-        <?php else: ?>
-        <div class="nodata">
-            <img src="<?php $this->options->themeUrl('static/img/nodata.svg'); ?>">
-            <span>相册为空，请发布相册类文章</span>
-        </div>
-        <?php endif;?>
     </div>
 </div>
 <a id="gototop" class="hidden"><i class="iconfont icon-up"></i></a>
