@@ -230,29 +230,9 @@ function themeFields($layout) { ?>
     $origin->input->setAttribute('class', 'full-width-input');
     $layout->addItem($origin);  
     
-    $author = new Typecho_Widget_Helper_Form_Element_Text('author', NULL, NULL, _t('作者'), _t('不填则默认为原创文章，作者为账号本人。建议根据内容权属填写著作权人，书单填写书籍作者，相册填写摄影师姓名。'));
+    $author = new Typecho_Widget_Helper_Form_Element_Text('author', NULL, NULL, _t('作者'), _t('不填则默认为原创文章，作者为账号本人。'));
     $author->input->setAttribute('class', 'full-width-input');
     $layout->addItem($author); 
-    
-    /**文章分类为相册时的专用字段**/
-    $photo = new Typecho_Widget_Helper_Form_Element_Text('photo', NULL, NULL, _t('照片原图'), _t('相册专用字段，相册类文章必填，在这里填入照片的原图地址，未填写则直接调用填写的封面图片。'));
-    $photo->input->setAttribute('class', 'full-width-input');
-    $layout->addItem($photo);
-    
-    /**文章分类为书单时的专用字段**/
-    $bookYear = new Typecho_Widget_Helper_Form_Element_Text('bookYear', NULL, NULL, _t('出版日期'), _t('书单专用字段，填你所读版本的出版日期，格式：2000年6月'));
-    $bookYear->input->setAttribute('class', 'full-width-input');
-    $layout->addItem($bookYear);   
-    
-    $bookCat = new Typecho_Widget_Helper_Form_Element_Select('bookCat', array(
-        '随笔' => '随笔',
-        '散文'=> '散文',
-        '记事' =>'记事',
-        '诗集' => '诗集',
-        '小说' => '小说',
-        '其他' => '其他'
-        ),'散文', _t('书籍分类'), _t('书单专用字段，书籍的分类'));
-    $layout->addItem($bookCat);
 }
 
 //自定义菜单
@@ -596,10 +576,6 @@ function showThumbnail($widget){
 
 //挂载点赞路径 + Ajax评论
 function themeInit($archive) {
-    if ($archive->is('category', 'books') || $archive->is('category', 'photos')) {
-        $archive->parameter->pageSize = 24;
-    }
-    
     // 评论点赞
     if ($archive->request->is("commentLike=dz")) {
         commentLikes($archive);
